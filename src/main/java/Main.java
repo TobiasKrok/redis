@@ -21,12 +21,17 @@ public class Main {
           clientSocket = serverSocket.accept();
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            String command = reader.readLine();
-            System.out.println("Client: " + command);
-            DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
-            dos.write("+PONG\r\n".getBytes());
-            dos.flush();
-            dos.close();
+
+
+            String command;
+            while ((command = reader.readLine()) != null) {
+                if(command.equalsIgnoreCase("PING")) {
+                    clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
+                    clientSocket.getOutputStream().flush();
+
+                }
+            }
+            clientSocket.getOutputStream().close();
         } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
         } finally {
