@@ -17,7 +17,9 @@ public class RespParser {
 
 
     public static byte[] fromBulk(String s) {
-
+        if(s == null) {
+            return ("$-1" + ctrlf()).getBytes();
+        }
         return ("$" + s.length() + ctrlf() + s + ctrlf()).getBytes();
     }
 

@@ -1,9 +1,6 @@
 package core;
 
-import command.CommandType;
-import command.EchoCommand;
-import command.PingCommand;
-import command.RedisCommand;
+import command.*;
 
 import java.util.List;
 
@@ -29,6 +26,8 @@ public class RedisCommandHandler {
                 redisCommand = new PingCommand();
             }
             case ECHO -> redisCommand = new EchoCommand();
+            case GET -> redisCommand = new GetCommand();
+            case SET -> redisCommand = new SetCommand();
             default -> throw new RuntimeException("Unknown command");
         }
 
