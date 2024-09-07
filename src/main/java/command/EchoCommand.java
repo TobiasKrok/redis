@@ -16,6 +16,7 @@ public class EchoCommand  extends RedisCommand{
             return new Raw(RespParser.fromSimpleError("ERR", "no string provided"));
         }
 
+        System.out.println(args);
         return new Raw(RespParser.fromBulk(args.getFirst()));
     }
 }

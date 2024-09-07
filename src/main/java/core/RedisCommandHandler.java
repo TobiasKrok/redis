@@ -20,7 +20,6 @@ public class RedisCommandHandler {
         CommandType commandType = CommandType.valueOf(rawCommands.getFirst());
         rawCommands.removeFirst(); // we don't need the first element anymore
         RedisCommand redisCommand;
-        System.out.println(rawCommands);
         switch (commandType) {
             case PING -> {
                 redisCommand = new PingCommand();
