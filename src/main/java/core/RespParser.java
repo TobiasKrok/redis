@@ -35,9 +35,6 @@ public class RespParser {
         return "\r\n";
     }
 
-    // will add more commands as needed
-
-    // THis will need to be updated lol, just hard code for npw
     public static List<String> read(ByteBuffer buffer) {
 
         List<String> commandsRaw = new ArrayList<>();

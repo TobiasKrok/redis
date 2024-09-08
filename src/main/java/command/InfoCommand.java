@@ -8,23 +8,22 @@ import core.RespParser;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-public class InfoCommand extends RedisCommand{
+public class InfoCommand extends RedisCommand {
 
 
     @Override
     public Rawable execute(final List<String> args, final RedisContext redisContext) {
 
         // assume for now that INFO always includes "replication"
+        System.out.println(args);
 
-        if(args.getFirst().equalsIgnoreCase("replication")) {
-            List<String> replicationInfo = redisContext.getReplication().getReplicationInfo();
-            ByteBuffer bb = ByteBuffer.allocate(256);
-            for (String s : replicationInfo) {
-                bb.put(RespParser.fromBulk(s));
-            }
-            return new Raw(bb.array());
+        List<String> replicationInfo = redisContext.getReplication().getReplicationInfo();
+        ByteBuffer bb = ByteBuffer.allocate(256);
+        for (String s : replicationInfo) {
+            bb.put(RespParser.fromBulk(s));
         }
-        // temp
-        return new Raw(RespParser.fromSimple("OK"));
-        }
+        return new Raw(bb.array());
+
+    }
+
 }
