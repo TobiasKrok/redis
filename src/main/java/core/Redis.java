@@ -2,6 +2,7 @@ package core;
 
 import command.RedisCommand;
 import configuration.RedisConfiguration;
+import replication.Replication;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,10 +15,12 @@ public final class Redis {
 
     private final RedisContext redisContext;
 
+    private final Replication replication;
     private final RedisConfiguration configuration;
     public Redis(RedisConfiguration configuration) {
         this.configuration = configuration;
-        this.redisContext = new RedisContext();
+        this.replication = new Replication(configuration.getReplicationConfiguration());
+        this.redisContext = new RedisContext(replication);
         this.commandHandler = new RedisCommandHandler(redisContext);
         this.eventLoop = new EventLoop(commandHandler);
     }
@@ -29,11 +32,4 @@ public final class Redis {
             throw new RuntimeException(e);
         }
     }
-
-    // look into thread safety
-    public RedisCommandHandler getCommandHandler() {
-        return commandHandler;
-    }
-
-
 }

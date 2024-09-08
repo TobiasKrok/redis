@@ -1,6 +1,7 @@
 package core;
 
 import replication.Replication;
+import replication.ReplicationRole;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,11 +14,11 @@ public class RedisContext {
 
     private final Replication replication;
 
-    protected RedisContext() {
+    protected RedisContext(Replication replication) {
         // maybe concurrent hashmap later but we're single threaded for now
         this.store = new HashMap<>();
         this.expiration = new HashMap<>();
-        this.replication = new Replication("master");
+        this.replication = replication;
     }
 
 

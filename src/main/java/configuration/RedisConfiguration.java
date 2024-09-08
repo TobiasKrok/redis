@@ -5,12 +5,13 @@ import replication.ReplicationRole;
 public final class RedisConfiguration {
     private final int port;
 
-    private final ReplicationRole replicationRole;
+    private final ReplicationConfiguration replicationConfiguration;
 
     // Private constructor to restrict instantiation
     private RedisConfiguration(Builder builder) {
         this.port = builder.port;
-        this.replicationRole = builder.role;
+        this.replicationConfiguration = builder.replicationConfiguration;
+
     }
 
     // Getters to access the configuration
@@ -18,22 +19,23 @@ public final class RedisConfiguration {
         return port;
     }
 
-    public ReplicationRole getReplicationRole() {
-        return replicationRole;
+    public ReplicationConfiguration getReplicationConfiguration() {
+        return replicationConfiguration;
     }
 
     // Static Builder class
     public static class Builder {
-        private int port;
+        private int port = 6379;
 
-        private ReplicationRole role;
+        private ReplicationConfiguration replicationConfiguration = new ReplicationConfiguration();
+
         public Builder withPort(int port) {
             this.port = port;
             return this;
         }
 
-        public Builder withReplicationRole(ReplicationRole role) {
-            this.role = role;
+        public Builder withReplication(String replicationHost, int port) {
+            this.replicationConfiguration = new ReplicationConfiguration(replicationHost, port);
             return this;
         }
 
