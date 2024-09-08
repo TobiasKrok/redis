@@ -1,6 +1,7 @@
 package core;
 
 import command.RedisCommand;
+import configuration.RedisConfiguration;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,11 +11,12 @@ public final class Redis {
 
     private final RedisCommandHandler commandHandler;
     private final EventLoop eventLoop;
-    private final int port;
 
     private final RedisContext redisContext;
-    public Redis(int port) {
-        this.port = port;
+
+    private final RedisConfiguration configuration;
+    public Redis(RedisConfiguration configuration) {
+        this.configuration = configuration;
         this.redisContext = new RedisContext();
         this.commandHandler = new RedisCommandHandler(redisContext);
         this.eventLoop = new EventLoop(commandHandler);
@@ -22,7 +24,7 @@ public final class Redis {
 
     public void startServer() {
         try {
-            eventLoop.run(port);
+            eventLoop.run(configuration.getPort());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

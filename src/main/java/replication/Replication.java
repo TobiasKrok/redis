@@ -5,21 +5,21 @@ import java.util.List;
 
 public class Replication {
 
-    private String role;
+    private ReplicationRole replicationRole;
 
-    public Replication(String role) {
-        this.role = role;
+    public Replication(ReplicationRole replicationRole) {
+        this.replicationRole = replicationRole;
     }
 
 
-    public String getRole() {
-        return role;
+    public ReplicationRole getRole() {
+        return replicationRole;
     }
 
     public List<String> getReplicationInfo() {
         List<String> info = new ArrayList<>();
 
-        info.add("role:" + role);
+        info.add("role:" + replicationRole.toString().toLowerCase());
 
         return info;
     }
