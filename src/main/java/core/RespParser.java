@@ -46,9 +46,7 @@ public class RespParser {
             //TODO bad
            commandsRaw = processArray(buffer);
         } else {
-            // FIX lATER
-             commandsRaw.add("PONG");
-
+            throw new RuntimeException("Not a command!");
         }
         return commandsRaw;
     }

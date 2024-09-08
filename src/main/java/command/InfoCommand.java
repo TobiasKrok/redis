@@ -18,11 +18,11 @@ public class InfoCommand extends RedisCommand {
         System.out.println(args);
 
         List<String> replicationInfo = redisContext.getReplication().getReplicationInfo();
-        ByteBuffer bb = ByteBuffer.allocate(256);
+        StringBuilder sb = new StringBuilder();
         for (String s : replicationInfo) {
-            bb.put(RespParser.fromBulk(s));
+            sb.append(s).append('\n');
         }
-        return new Raw(bb.array());
+        return new Raw(RespParser.fromBulk(sb.toString()));
 
     }
 
