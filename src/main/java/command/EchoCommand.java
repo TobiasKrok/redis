@@ -10,7 +10,7 @@ import java.util.List;
 public class EchoCommand  extends RedisCommand{
 
     @Override
-    public Rawable execute(List<String> args, RedisContext redisContext) {
+    public Rawable execute(final List<String> args, final RedisContext redisContext) {
 
         if(args.isEmpty()) {
             return new Raw(RespParser.fromSimpleError("ERR", "no string provided"));

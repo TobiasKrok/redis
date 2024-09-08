@@ -11,7 +11,7 @@ import java.util.List;
 public class PingCommand extends RedisCommand {
 
     @Override
-    public Rawable execute(List<String> args, RedisContext redisContext) {
+    public Rawable execute(final List<String> args, final RedisContext redisContext) {
 
         return new Raw(RespParser.fromSimple("PONG"));
     }

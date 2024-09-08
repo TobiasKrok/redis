@@ -9,7 +9,7 @@ import java.util.List;
 
 public abstract class RedisCommand {
 
-    public abstract Rawable execute(List<String> args, RedisContext redisContext);
+    public abstract Rawable execute(final List<String> args, final RedisContext redisContext);
 
 
 
