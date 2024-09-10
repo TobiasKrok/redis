@@ -1,9 +1,16 @@
 package replication;
 
+import command.PingCommand;
 import configuration.ReplicationConfiguration;
+import core.RespParser;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.rmi.server.UID;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,11 +35,27 @@ public class Replication {
 
     }
 
+    public void startReplicationServer() {
+        try(SocketChannel channel = SocketChannel.open()) {
+            channel.connect(new InetSocketAddress(masterHost, masterPort));
+            initiateHandShake(channel);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    private void initiateHandShake(SocketChannel channel) throws IOException {
+        System.out.println("Initiating handshake...");
+        channel.write(ByteBuffer.wrap(RespParser.fromArray(List.of("PING"))));
+        System.out.println("Sent PING to master");
+
+    }
 
     public ReplicationRole getRole() {
         return replicationRole;
     }
 
+    //todo toString() instead
     public List<String> getReplicationInfo() {
         List<String> info = new ArrayList<>();
 

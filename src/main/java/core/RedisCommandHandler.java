@@ -23,6 +23,7 @@ public class RedisCommandHandler {
         rawCommands.removeFirst(); // we don't need the first element anymore
         RedisCommand redisCommand;
         switch (commandType) {
+            case SIMPLE_PING -> redisCommand = new SimplePingCommand();
             case PING -> redisCommand = new PingCommand();
             case ECHO -> redisCommand = new EchoCommand();
             case GET -> redisCommand = new GetCommand();

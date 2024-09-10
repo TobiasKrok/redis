@@ -7,11 +7,12 @@ import core.RespParser;
 
 import java.util.List;
 
-public class PingCommand extends RedisCommand{
+public class SimplePingCommand extends RedisCommand {
+
     @Override
     public Rawable execute(final List<String> args, final RedisContext redisContext) {
 
-        return new Raw(RespParser.fromBulk("PONG"));
+        return new Raw(RespParser.fromSimple("PONG"));
     }
 
 }

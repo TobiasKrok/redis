@@ -14,10 +14,12 @@ import java.util.Set;
 class EventLoop {
 
 private final RedisCommandHandler commandHandler;
+
+
     public EventLoop(RedisCommandHandler commandHandler) {
         this.commandHandler = commandHandler;
     }
-    private volatile boolean stop = false;
+    private boolean stop = false;
 
 
 
@@ -58,7 +60,6 @@ private final RedisCommandHandler commandHandler;
 
                     }
                     keyIterator.remove();
-
                 }
             }
         }

@@ -3,6 +3,7 @@ package core;
 import command.RedisCommand;
 import configuration.RedisConfiguration;
 import replication.Replication;
+import replication.ReplicationRole;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,6 +28,9 @@ public final class Redis {
 
     public void startServer() {
         try {
+            if(replication.getRole() == ReplicationRole.SLAVE) {
+                replication.startReplicationServer();
+            }
             eventLoop.run(configuration.getPort());
         } catch (IOException e) {
             throw new RuntimeException(e);

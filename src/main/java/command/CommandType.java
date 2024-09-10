@@ -1,6 +1,6 @@
 package command;
 
 public enum CommandType {
-    PING, ECHO, SET, GET, INFO;
+    SIMPLE_PING, PING, ECHO, SET, GET, INFO;
 
 }

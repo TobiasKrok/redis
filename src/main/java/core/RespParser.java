@@ -17,10 +17,14 @@ public class RespParser {
 
 
     public static byte[] fromBulk(String s) {
+        return bulkAsString(s).getBytes();
+    }
+
+    private static String bulkAsString(String s) {
         if(s == null) {
-            return ("$-1" + ctrlf()).getBytes();
+            return ("$-1" + ctrlf());
         }
-        return ("$" + s.length() + ctrlf() + s + ctrlf()).getBytes();
+        return ("$" + s.length() + ctrlf() + s + ctrlf());
     }
 
     public static byte[] fromSimple(String s) {
@@ -29,6 +33,14 @@ public class RespParser {
 
     public static byte[] fromSimpleError(String e, String m) {
         return ("-" + e + " " + m + ctrlf()).getBytes();
+    }
+
+    public static byte[] fromArray(List<String> strings) {
+        StringBuilder sb = new StringBuilder();
+        for (String s : strings) {
+            sb.append(bulkAsString(s));
+        }
+        return ("*" + strings.size()+ ctrlf() + sb).getBytes();
     }
 
     private static String ctrlf() {
@@ -43,10 +55,9 @@ public class RespParser {
         char type = (char) firstByte;
         // assuming its a command
         if(type == ARRAY) {
-            //TODO bad
            commandsRaw = processArray(buffer);
-        } else {
-            throw new RuntimeException("Not a command!");
+        } else  if (type == SIMPLE_STRING) {
+            commandsRaw.add("SIMPLE_PING");
         }
         return commandsRaw;
     }
