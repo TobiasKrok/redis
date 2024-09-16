@@ -57,7 +57,7 @@ public class RespParser {
         if(type == ARRAY) {
            commandsRaw = processArray(buffer);
         } else  if (type == SIMPLE_STRING) {
-            commandsRaw.add("SIMPLE_PING");
+            commandsRaw.add(processSimpleString(buffer));
         }
         return commandsRaw;
     }
@@ -78,6 +78,16 @@ public class RespParser {
         return commands;
     }
 
+    private static String processSimpleString(ByteBuffer buffer) {
+        StringBuilder sb = new StringBuilder();
+
+        char next = (char)buffer.get();
+        while (next != '\r' ) {
+            sb.append(next);
+            next = (char)buffer.get();
+        }
+        return sb.toString();
+    }
     private static String processBulkString(ByteBuffer buffer) {
         byte secondByte = buffer.get(); //length
         int length = Character.getNumericValue((char) secondByte);

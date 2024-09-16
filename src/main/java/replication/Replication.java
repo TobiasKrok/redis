@@ -13,6 +13,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Replication {
 
@@ -23,34 +26,28 @@ public class Replication {
     // can be null
     private final int masterPort;
 
+    private final int serverPort; // the redis server port
+
     // not good to use uuid but w/e
     private final String id = UUID.randomUUID().toString();
 
     private final int offset = 0;
 
-    public Replication(ReplicationConfiguration replicationConfiguration) {
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+    public Replication(ReplicationConfiguration replicationConfiguration, int serverPort) {
         this.replicationRole = replicationConfiguration.getRole();
         this.masterHost = replicationConfiguration.getHost();
         this.masterPort = replicationConfiguration.getPort();
-
+        this.serverPort = serverPort;
     }
 
-    public void startReplicationServer() {
-        try(SocketChannel channel = SocketChannel.open()) {
-            channel.connect(new InetSocketAddress(masterHost, masterPort));
-            initiateHandShake(channel);
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-        }
+
+    public void startReplicationService() {
+        System.out.println("redis: starting replication service");
+        // Replication cron, I think this is how Redis does it?
+        executorService.scheduleAtFixedRate(new ReplicationClient(serverPort, masterHost, masterPort), 1,1,  TimeUnit.SECONDS);
     }
-
-    private void initiateHandShake(SocketChannel channel) throws IOException {
-        System.out.println("Initiating handshake...");
-        channel.write(ByteBuffer.wrap(RespParser.fromArray(List.of("PING"))));
-        System.out.println("Sent PING to master");
-
-    }
-
     public ReplicationRole getRole() {
         return replicationRole;
     }

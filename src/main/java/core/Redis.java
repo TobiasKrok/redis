@@ -20,7 +20,7 @@ public final class Redis {
     private final RedisConfiguration configuration;
     public Redis(RedisConfiguration configuration) {
         this.configuration = configuration;
-        this.replication = new Replication(configuration.getReplicationConfiguration());
+        this.replication = new Replication(configuration.getReplicationConfiguration(), configuration.getPort());
         this.redisContext = new RedisContext(replication);
         this.commandHandler = new RedisCommandHandler(redisContext);
         this.eventLoop = new EventLoop(commandHandler);
@@ -29,7 +29,7 @@ public final class Redis {
     public void startServer() {
         try {
             if(replication.getRole() == ReplicationRole.SLAVE) {
-                replication.startReplicationServer();
+                replication.startReplicationService();
             }
             eventLoop.run(configuration.getPort());
         } catch (IOException e) {

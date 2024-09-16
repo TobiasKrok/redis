@@ -13,15 +13,12 @@ import java.util.Set;
 
 class EventLoop {
 
-private final RedisCommandHandler commandHandler;
-
+    private final RedisCommandHandler commandHandler;
+    private final boolean stop = false;
 
     public EventLoop(RedisCommandHandler commandHandler) {
         this.commandHandler = commandHandler;
     }
-    private boolean stop = false;
-
-
 
     protected void run(int port) throws IOException {
         try (ServerSocketChannel ssc = ServerSocketChannel.open()) {
@@ -53,8 +50,8 @@ private final RedisCommandHandler commandHandler;
                             client.close();
                         } else {
                             buffer.flip();
-                           List<String> rawCommands  = RespParser.read(buffer);
-                           byte[] res = commandHandler.process(rawCommands);
+                            List<String> rawCommands = RespParser.read(buffer);
+                            byte[] res = commandHandler.process(rawCommands);
                             client.write(ByteBuffer.wrap(res));
                         }
 
