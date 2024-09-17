@@ -29,6 +29,7 @@ public class RedisCommandHandler {
             case GET -> redisCommand = new GetCommand();
             case SET -> redisCommand = new SetCommand();
             case INFO -> redisCommand = new InfoCommand();
+            case REPLCONF -> redisCommand = new ReplConfCommand();
             default -> throw new RuntimeException("Unknown command");
         }
 
