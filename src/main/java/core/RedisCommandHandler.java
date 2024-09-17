@@ -30,6 +30,7 @@ public class RedisCommandHandler {
             case SET -> redisCommand = new SetCommand();
             case INFO -> redisCommand = new InfoCommand();
             case REPLCONF -> redisCommand = new ReplConfCommand();
+            case PSYNC -> redisCommand = new PsyncCommand();
             default -> throw new RuntimeException("Unknown command");
         }
 

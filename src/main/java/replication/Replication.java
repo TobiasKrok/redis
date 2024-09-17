@@ -28,10 +28,9 @@ public class Replication {
 
     private final int serverPort; // the redis server port
 
-    // not good to use uuid but w/e
-    private final String id = UUID.randomUUID().toString();
+    private final String id = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
 
-    private final int offset = 0;
+    private volatile int offset = 0;
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
