@@ -1,16 +1,40 @@
 package command;
 
 import args.Rawable;
+import core.RedisClient;
 import core.RedisContext;
 
-import java.util.ArrayList;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public abstract class RedisCommand {
 
-    public abstract Rawable execute(final List<String> args, final RedisContext redisContext);
+
+    private final Queue<ByteBuffer> queue = new LinkedList<>();
+
+    public abstract Queue<ByteBuffer> execute(final List<String> args, final RedisContext redisContext);
+
+    protected Queue<ByteBuffer> queue(final List<byte[]> out) {
+        for (byte[] b : out) {
+            queue.add(ByteBuffer.wrap(b));
+        }
+
+        return queue;
+    }
+
+    protected Queue<ByteBuffer> queue(byte[] out) {
+        queue.add(ByteBuffer.wrap(out));
+        return queue;
+    }
+
+    protected Queue<ByteBuffer> queue() {
+    return queue;
+    }
 
 
 
-}
+    }

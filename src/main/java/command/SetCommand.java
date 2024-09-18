@@ -5,14 +5,16 @@ import args.Rawable;
 import core.RedisContext;
 import core.RespParser;
 
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.List;
+import java.util.Queue;
 
 public class SetCommand extends RedisCommand {
     @Override
-    public Rawable execute(final List<String> args, final RedisContext redisContext) {
+    public Queue<ByteBuffer> execute(final List<String> args, final RedisContext redisContext) {
         if(args.size() < 2) {
-            return new Raw(RespParser.fromSimpleError("ERR", "missing arguments"));
+            return this.queue(RespParser.fromSimpleError("ERR", "missing arguments"));
         }
 
         // check rest of the commands
@@ -27,7 +29,7 @@ public class SetCommand extends RedisCommand {
             }
         }
         redisContext.getStore().put(args.getFirst(), args.get(1));
-        return new Raw(RespParser.fromSimple("OK"));
+        return this.queue(RespParser.fromSimple("OK"));
 
     }
 }

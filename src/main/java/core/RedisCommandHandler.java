@@ -2,7 +2,9 @@ package core;
 
 import command.*;
 
+import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Queue;
 
 public class RedisCommandHandler {
 
@@ -12,7 +14,7 @@ public class RedisCommandHandler {
     }
 
 
-    public byte[] process(List<String> rawCommands) throws IllegalArgumentException {
+    public boolean process(List<String> rawCommands, RedisClient client) throws IllegalArgumentException {
 
         if(rawCommands.isEmpty()) throw new RuntimeException("Empty command passed");
 
@@ -34,6 +36,12 @@ public class RedisCommandHandler {
             default -> throw new RuntimeException("Unknown command");
         }
 
-        return redisCommand.execute(rawCommands, redisContext).getRaw();
+
+        Queue<ByteBuffer> res =  redisCommand.execute(rawCommands, redisContext);
+        if(res.isEmpty()) return false; // nothing to write
+
+        // adds all the returned responses to the client write queue
+        client.queueData(res);
+        return true;
     }
 }

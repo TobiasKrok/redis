@@ -7,12 +7,13 @@ import core.RespParser;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Queue;
 
 public class InfoCommand extends RedisCommand {
 
 
     @Override
-    public Rawable execute(final List<String> args, final RedisContext redisContext) {
+    public Queue<ByteBuffer> execute(final List<String> args, final RedisContext redisContext) {
 
         // assume for now that INFO always includes "replication"
         System.out.println(args);
@@ -22,7 +23,7 @@ public class InfoCommand extends RedisCommand {
         for (String s : replicationInfo) {
             sb.append(s).append('\n');
         }
-        return new Raw(RespParser.fromBulk(sb.toString()));
+        return this.queue(RespParser.fromBulk(sb.toString()));
 
     }
 

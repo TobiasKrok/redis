@@ -13,6 +13,8 @@ import java.util.Set;
 
 class EventLoop {
 
+    private static final int BUFFER_SIZE = 256;  // Use a constant for buffer size
+
     private final RedisCommandHandler commandHandler;
     private final boolean stop = false;
 
@@ -21,44 +23,89 @@ class EventLoop {
     }
 
     protected void run(int port) throws IOException {
-        try (ServerSocketChannel ssc = ServerSocketChannel.open()) {
-            ssc.bind(new InetSocketAddress("localhost", port));
-            ssc.configureBlocking(false);
+        try (ServerSocketChannel serverChannel = ServerSocketChannel.open()) {
+            serverChannel.bind(new InetSocketAddress("localhost", port));
+            serverChannel.configureBlocking(false);
             Selector selector = Selector.open();
-            ssc.register(selector, SelectionKey.OP_ACCEPT);
+            serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
             while (!stop) {
-                selector.select();
+                selector.select();  // Wait for events
+
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();
                 Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
+
                 while (keyIterator.hasNext()) {
                     SelectionKey key = keyIterator.next();
-                    if (key.isAcceptable()) {
-                        // accpets a new client and say that we're interested in reading from that client
-                        ServerSocketChannel server = (ServerSocketChannel) key.channel();
-                        SocketChannel client = server.accept();
-                        client.configureBlocking(false);
-                        client.register(selector, SelectionKey.OP_READ);
-                        System.out.println("redis: registered client " + client.getRemoteAddress());
-                    } else if (key.isReadable()) {
-                        // we got some data from a client that we are interested in and now we read
-                        SocketChannel client = (SocketChannel) key.channel();
-                        ByteBuffer buffer = ByteBuffer.allocate(256);
-                        int bytesRead = client.read(buffer);
-                        System.out.printf("redis: recv %s bytes from client " + client.getRemoteAddress() + "%n", bytesRead);
-                        if (bytesRead == -1) {
-                            client.close();
-                        } else {
-                            buffer.flip();
-                            List<String> rawCommands = RespParser.read(buffer);
-                            byte[] res = commandHandler.process(rawCommands);
-                            client.write(ByteBuffer.wrap(res));
-                        }
+                    keyIterator.remove();  // Remove key to avoid reprocessing
 
+                    try {
+                        if (key.isAcceptable()) {
+                            handleAccept(key, selector);
+                        } else if (key.isReadable()) {
+                            handleRead(key, selector);
+                        } else if (key.isWritable()) {
+                            handleWrite(key, selector);
+                        }
+                    } catch (IOException e) {
+                        key.cancel();  // Cancel the key in case of errors
+                        key.channel().close();
+                        System.err.println("Connection closed due to error: " + e.getMessage());
                     }
-                    keyIterator.remove();
                 }
             }
+        }
+    }
+
+    // Handle client connection accept
+    private void handleAccept(SelectionKey key, Selector selector) throws IOException {
+        ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
+        SocketChannel clientChannel = serverChannel.accept();
+        clientChannel.configureBlocking(false);
+
+        RedisClient redisClient = new RedisClient(clientChannel, 256);
+        clientChannel.register(selector, SelectionKey.OP_READ, redisClient);
+
+        System.out.println("redis: registered client " + clientChannel.getRemoteAddress());
+    }
+
+    // Handle client data read
+    private void handleRead(SelectionKey key, Selector selector) throws IOException {
+        SocketChannel clientChannel = (SocketChannel) key.channel();
+        RedisClient redisClient = (RedisClient) key.attachment();
+
+        ByteBuffer buffer = redisClient.getBuffer();  // Use a reusable buffer
+        int bytesRead = clientChannel.read(buffer);
+
+        if (bytesRead == -1) {
+            System.out.println("redis: recv -1 bytes, closing client connection...");
+            clientChannel.close();
+            return;
+        }
+
+        System.out.printf("redis: recv %s bytes from client " + clientChannel.getRemoteAddress() + "%n", bytesRead);
+        buffer.flip();
+
+        List<String> rawCommands = RespParser.read(buffer);
+        boolean hasWriteable = commandHandler.process(rawCommands, redisClient);
+
+        if (hasWriteable) {
+            clientChannel.register(selector, SelectionKey.OP_WRITE, redisClient);
+        }
+
+        buffer.clear();  // Clear buffer for next read
+    }
+
+    // Handle client data write
+    private void handleWrite(SelectionKey key, Selector selector) throws IOException {
+        SocketChannel clientChannel = (SocketChannel) key.channel();
+        RedisClient redisClient = (RedisClient) key.attachment();
+
+        redisClient.writeToClient();  // Write queued data
+
+        // If all data has been written, switch back to read mode
+        if (!redisClient.hasPendingWrites()) {
+            clientChannel.register(selector, SelectionKey.OP_READ, redisClient);
         }
     }
 }

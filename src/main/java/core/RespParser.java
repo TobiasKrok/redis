@@ -17,14 +17,20 @@ public class RespParser {
 
 
     public static byte[] fromBulk(String s) {
-        return bulkAsString(s).getBytes();
+        return bulkAsString(s, false).getBytes();
     }
 
-    private static String bulkAsString(String s) {
+    public static byte[] fromBulk(String s, boolean removeTrailingCtrl) {
+        return bulkAsString(s, removeTrailingCtrl).getBytes();
+    }
+
+
+    private static String bulkAsString(String s, boolean noTrail) {
         if(s == null) {
             return ("$-1" + ctrlf());
         }
-        return ("$" + s.length() + ctrlf() + s + ctrlf());
+        String out = ("$" + s.length() + ctrlf() + s);
+        return noTrail ? out : out + ctrlf();
     }
 
     public static byte[] fromSimple(String s) {
@@ -38,7 +44,7 @@ public class RespParser {
     public static byte[] fromArray(List<String> strings) {
         StringBuilder sb = new StringBuilder();
         for (String s : strings) {
-            sb.append(bulkAsString(s));
+            sb.append(bulkAsString(s, false));
         }
         return ("*" + strings.size()+ ctrlf() + sb).getBytes();
     }
@@ -61,7 +67,6 @@ public class RespParser {
         }
         return commandsRaw;
     }
-
     private static List<String> process(ByteBuffer buffer) {
         byte b = buffer.get();
 

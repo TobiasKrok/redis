@@ -5,13 +5,15 @@ import args.Rawable;
 import core.RedisContext;
 import core.RespParser;
 
+import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Queue;
 
 public class PingCommand extends RedisCommand{
     @Override
-    public Rawable execute(final List<String> args, final RedisContext redisContext) {
+    public Queue<ByteBuffer> execute(final List<String> args, final RedisContext redisContext) {
 
-        return new Raw(RespParser.fromBulk("PONG"));
+        return this.queue(RespParser.fromBulk("PONG"));
     }
 
 }
