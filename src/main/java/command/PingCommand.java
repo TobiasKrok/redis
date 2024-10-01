@@ -1,7 +1,6 @@
 package command;
 
-import args.Raw;
-import args.Rawable;
+import core.RedisClient;
 import core.RedisContext;
 import core.RespParser;
 
@@ -11,7 +10,7 @@ import java.util.Queue;
 
 public class PingCommand extends RedisCommand{
     @Override
-    public Queue<ByteBuffer> execute(final List<String> args, final RedisContext redisContext) {
+    public Queue<ByteBuffer> execute(final List<String> args, List<String> rawArgs, RedisClient redisClient, final RedisContext redisContext) {
 
         return this.queue(RespParser.fromBulk("PONG"));
     }

@@ -59,7 +59,7 @@ public class RespParser {
         byte firstByte = buffer.get();
 
         char type = (char) firstByte;
-        // assuming its a command
+        // assuming it's a command
         if(type == ARRAY) {
            commandsRaw = processArray(buffer);
         } else  if (type == SIMPLE_STRING) {

@@ -1,7 +1,6 @@
 package command;
 
-import args.Raw;
-import args.Rawable;
+import core.RedisClient;
 import core.RedisContext;
 import core.RespParser;
 
@@ -10,9 +9,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Queue;
 
-public class SetCommand extends RedisCommand {
+public class SetCommand extends PropagatedRedisCommand {
+
     @Override
-    public Queue<ByteBuffer> execute(final List<String> args, final RedisContext redisContext) {
+    public Queue<ByteBuffer> propagatedExecute(final List<String> args, List<String> rawArgs, RedisClient redisClient, final RedisContext redisContext) {
         if(args.size() < 2) {
             return this.queue(RespParser.fromSimpleError("ERR", "missing arguments"));
         }
@@ -25,10 +25,10 @@ public class SetCommand extends RedisCommand {
                     throw new RuntimeException("SET px is missing argument");
                 }
                 long expiry = Instant.now().toEpochMilli() + Integer.parseInt(args.get(i + 1));
-                redisContext.getExpiration().put(args.getFirst(), expiry);
+                redisContext.getExpiration().compute(args.getFirst(), (k, v) -> expiry);
             }
         }
-        redisContext.getStore().put(args.getFirst(), args.get(1));
+        redisContext.getStore().compute(args.getFirst(), (k, v) -> args.get(1));
         return this.queue(RespParser.fromSimple("OK"));
 
     }

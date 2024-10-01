@@ -5,9 +5,6 @@ import org.apache.commons.cli.*;
 
 public class Main {
     public static void main(String[] args) throws ParseException {
-        // You can use print statements as follows for debugging, they'll be visible when running tests.
-        System.out.println("Logs from your program will appear here!");
-
 
         Options options = new Options();
 
@@ -45,8 +42,6 @@ public class Main {
             }
         }
 
-
-        //if(cmd.hasOption("--re"))
 
         Redis redis = new Redis(builder.build());
         redis.startServer();

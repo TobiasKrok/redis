@@ -14,7 +14,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>21</java.version>
     </properties>
-
+    
     <dependencies>
 
         <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
@@ -23,7 +23,6 @@
             <artifactId>commons-cli</artifactId>
             <version>1.9.0</version>
         </dependency>
-
     </dependencies>
 
     <build>

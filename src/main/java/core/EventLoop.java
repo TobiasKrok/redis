@@ -10,6 +10,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 class EventLoop {
 
@@ -18,8 +19,11 @@ class EventLoop {
     private final RedisCommandHandler commandHandler;
     private final boolean stop = false;
 
-    public EventLoop(RedisCommandHandler commandHandler) {
+    private final ConcurrentHashMap<String, RedisClient> connectedClients;
+
+    public EventLoop(final RedisCommandHandler commandHandler, final ConcurrentHashMap<String, RedisClient> connectedClients) {
         this.commandHandler = commandHandler;
+        this.connectedClients = connectedClients;
     }
 
     protected void run(int port) throws IOException {
@@ -30,14 +34,15 @@ class EventLoop {
             serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
             while (!stop) {
-                selector.select();  // Wait for events
+
+                selector.select();  // blocks
 
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();
                 Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 
                 while (keyIterator.hasNext()) {
                     SelectionKey key = keyIterator.next();
-                    keyIterator.remove();  // Remove key to avoid reprocessing
+                    keyIterator.remove();
 
                     try {
                         if (key.isAcceptable()) {
@@ -48,7 +53,7 @@ class EventLoop {
                             handleWrite(key, selector);
                         }
                     } catch (IOException e) {
-                        key.cancel();  // Cancel the key in case of errors
+                        key.cancel();
                         key.channel().close();
                         System.err.println("Connection closed due to error: " + e.getMessage());
                     }
@@ -63,10 +68,12 @@ class EventLoop {
         SocketChannel clientChannel = serverChannel.accept();
         clientChannel.configureBlocking(false);
 
-        RedisClient redisClient = new RedisClient(clientChannel, 256);
+        RedisClient redisClient = new RedisClient(clientChannel, selector, 256);
+        connectedClients.putIfAbsent(redisClient.getId(), redisClient);
         clientChannel.register(selector, SelectionKey.OP_READ, redisClient);
-
         System.out.println("redis: registered client " + clientChannel.getRemoteAddress());
+
+
     }
 
     // Handle client data read
@@ -74,11 +81,11 @@ class EventLoop {
         SocketChannel clientChannel = (SocketChannel) key.channel();
         RedisClient redisClient = (RedisClient) key.attachment();
 
-        ByteBuffer buffer = redisClient.getBuffer();  // Use a reusable buffer
+        ByteBuffer buffer = redisClient.getBuffer();
         int bytesRead = clientChannel.read(buffer);
-
         if (bytesRead == -1) {
-            System.out.println("redis: recv -1 bytes, closing client connection...");
+            System.out.println("redis: recv -1 bytes, closing client connection for client " + redisClient.getId());
+            connectedClients.computeIfPresent(redisClient.getId(), (k, v) -> null);
             clientChannel.close();
             return;
         }
@@ -87,12 +94,7 @@ class EventLoop {
         buffer.flip();
 
         List<String> rawCommands = RespParser.read(buffer);
-        boolean hasWriteable = commandHandler.process(rawCommands, redisClient);
-
-        if (hasWriteable) {
-            clientChannel.register(selector, SelectionKey.OP_WRITE, redisClient);
-        }
-
+        commandHandler.process(rawCommands, redisClient);
         buffer.clear();  // Clear buffer for next read
     }
 
@@ -105,7 +107,8 @@ class EventLoop {
 
         // If all data has been written, switch back to read mode
         if (!redisClient.hasPendingWrites()) {
-            clientChannel.register(selector, SelectionKey.OP_READ, redisClient);
+            System.out.println(redisClient.getId() + " has no writable");
+            key.interestOps(SelectionKey.OP_READ);
         }
     }
 }

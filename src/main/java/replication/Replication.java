@@ -2,6 +2,8 @@ package replication;
 
 import command.PingCommand;
 import configuration.ReplicationConfiguration;
+import core.RedisClient;
+import core.RedisCommandHandler;
 import core.RespParser;
 
 import java.io.IOException;
@@ -9,13 +11,8 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.rmi.server.UID;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class Replication {
 
@@ -32,21 +29,57 @@ public class Replication {
 
     private volatile int offset = 0;
 
-    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final List<RedisClient> connectedReplicas;
+
+    private RedisCommandHandler commandHandler;
+
+
 
     public Replication(ReplicationConfiguration replicationConfiguration, int serverPort) {
         this.replicationRole = replicationConfiguration.getRole();
         this.masterHost = replicationConfiguration.getHost();
         this.masterPort = replicationConfiguration.getPort();
         this.serverPort = serverPort;
+        this.connectedReplicas = new ArrayList<>();
     }
 
+
+    public void setCommandHandler(RedisCommandHandler commandHandler) {
+        if(this.commandHandler != null) {
+            throw new RuntimeException("You should only set the command handler once");
+        }
+        this.commandHandler = commandHandler;
+    }
 
     public void startReplicationService() {
-        System.out.println("redis: starting replication service");
-        // Replication cron, I think this is how Redis does it?
-        executorService.scheduleAtFixedRate(new ReplicationClient(serverPort, masterHost, masterPort), 1,1,  TimeUnit.SECONDS);
+        if(commandHandler == null) throw new RuntimeException("CommandHandler not set");
+        System.out.println("redis: starting replication service as replica");
+        ReplicationClient replicationClient = new ReplicationClient(serverPort, masterHost, masterPort, commandHandler);
+        new Thread(replicationClient).start();
     }
+
+    public void registerReplica(RedisClient client) {
+        if(commandHandler == null) throw new RuntimeException("CommandHandler not set");
+        try {
+            connectedReplicas.add(client);
+        } catch (Exception e) {
+
+            System.err.println("redis: repl failed to register client: " + e.getMessage());
+        }
+    }
+
+    public void propagate(List<String> args) {
+        try {
+            for (RedisClient client : connectedReplicas) {
+                System.out.println("redis: propagating to " + client.getId());
+                client.queueData(ByteBuffer.wrap(RespParser.fromArray(args)));
+            }
+
+        } catch (Exception e) {
+            System.out.println("dis: failed to propagate: " + e.getMessage());
+        }
+    }
+
     public ReplicationRole getRole() {
         return replicationRole;
     }
